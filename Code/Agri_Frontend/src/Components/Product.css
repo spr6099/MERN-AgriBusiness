@@ -1,0 +1,11 @@
+/* Ensure your styles are specific enough */
+.carousel-item img {
+    width: 100%;
+    height: auto;
+  }
+  
+  .product-carousel img {
+    width: 100%;
+    height: auto;
+  }
+  

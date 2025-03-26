@@ -1,0 +1,41 @@
+.product-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 90px;
+  }
+  
+  .product-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .product-image img {
+    max-width: 100%;
+    height: auto;
+    width: 300px;
+    height: 250px;
+  }
+  
+  .product-details {
+    flex: 1;
+    margin-left: 50px;
+  }
+  
+  .imgs {
+    height: 80px;
+    width: 80px;
+    padding: 10px;
+  }
+  
+  .fas {
+    color: green;
+  }
+  
+  .checked {
+    color: orange;
+  }
+  
