@@ -64,6 +64,7 @@ function App() {
         ) : auth.userStatus === "1" ? (
           <>
             <Route path="/" element={<Profile />} />
+
             <Route path="/category" element={<CategoryView />} />
             <Route path="/viewproducts" element={<ViewProducts />} />
             <Route path="/addproduct" element={<AddProduct />} />
@@ -76,6 +77,11 @@ function App() {
             <Route path="/viewrating" element={<Viewrating />} />
 
             <Route path="*" element={<Navigate to="/" />} />
+          </>
+        ) : auth.userStatus === "3" ? (
+          <>
+            <Route path="/" element={<Profile />}/> 
+            
           </>
         ) : (
           <>
