@@ -36,3 +36,17 @@
     transform: rotate(360deg);
   }
 }
+
+
+
+
+/* Dealer........ */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 items per row */
+  gap: 20px; /* Adjust spacing */
+}
+
+.product-card {
+  width: 100%;
+}

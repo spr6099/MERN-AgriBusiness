@@ -9,7 +9,7 @@ export default function Sidebar() {
   return (
     <>
       {auth.userStatus === "0" && (
-        <div className="sidebar pe-4 pb-3">
+        <div className="sidebar pe-4 pb-3 mt-5">
           <nav className="navbar bg-secondary navbar-dark">
             <a href="/" className="navbar-brand mx-4 mb-3">
               <h3 className="text-primary">
@@ -89,7 +89,7 @@ export default function Sidebar() {
       )}
 
       {auth.userStatus === "1" && (
-        <div className="sidebar pe-4 pb-3">
+        <div className="sidebar pe-4 pb-3 mt-5">
           <nav className="navbar bg-secondary navbar-dark">
             <a href="index.html" className="navbar-brand mx-4 mb-3">
               <h3 className="text-primary">
@@ -136,6 +136,14 @@ export default function Sidebar() {
               </a>
               <a href="/viewcultivation" className="nav-item nav-link">
                 <i className="fas fa-chart-area fa-fw me-2"></i>Cultivation
+              </a>
+              <a href="/farmEssentials" className="nav-item nav-link">
+                <i className="fas fa-chart-area fa-fw me-2"></i>Farm Essentials
+              </a>
+              <a href="/techSupport" className="nav-item nav-link">
+                <i className="fas fa-chart-area fa-fw me-2"></i>TechSupport Hub
+
+
               </a>
               <a href="/salereport" className="nav-item nav-link">
                 <i className="fa fa-fax me-2"></i>Sale History
@@ -150,8 +158,9 @@ export default function Sidebar() {
           </nav>
         </div>
       )}
+
       {auth.userStatus === "3" && (
-        <div className="sidebar pe-4 pb-3">
+        <div className="sidebar pe-4 pb-3 mt-5">
           <nav className="navbar bg-secondary navbar-dark">
             <a href="index.html" className="navbar-brand mx-4 mb-3">
               <h3 className="text-primary">
@@ -180,23 +189,25 @@ export default function Sidebar() {
               </div>
               <div className="ms-3">
                 <h6 className="mb-0">{auth.name}</h6>
-                <span>Farmer</span>
+                <span>Dealer</span>
               </div>
             </div>
             <div className="navbar-nav w-100">
               <a href="/" className="nav-item nav-link active">
                 <i className="fa fa-tachometer-alt me-2"></i>Dashboard
               </a>
-              <a href="/profile" className="nav-item nav-link">
-                <i className="fa fa-eye me-2"></i>Profile
+              <a href="/agri_inputs" className="nav-item nav-link">
+                <i className="fa fa-eye me-2"></i>Agricultural inputs
               </a>
-              <a href="/category" className="nav-item nav-link">
-                <i className="fa fa-square me-2"></i>Category
+              <a href="/technical" className="nav-item nav-link">
+                <i className="fa fa-square me-2"></i>Advisory and technical
+                support
               </a>
-              <a href="/viewproducts" className="nav-item nav-link">
-                <i className="fa fa-dot-circle me-2"></i>Product
+              <a className="nav-item nav-link">
+                <i className="fa fa-dot-circle me-2"></i>Logistics and delivery
               </a>
-              <a href="/viewcultivation" className="nav-item nav-link">
+
+              {/* <a href="/viewcultivation" className="nav-item nav-link">
                 <i className="fas fa-chart-area fa-fw me-2"></i>Cultivation
               </a>
               <a href="/salereport" className="nav-item nav-link">
@@ -207,7 +218,7 @@ export default function Sidebar() {
               </a>
               <a href="/viewfeedback" className="nav-item nav-link">
                 <i className="fa fa-comment me-2"></i>feedback
-              </a>
+              </a> */}
             </div>
           </nav>
         </div>

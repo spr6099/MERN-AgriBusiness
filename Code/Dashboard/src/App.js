@@ -27,6 +27,12 @@ import NewDealer from "./Component/Admin/NewDealer";
 import DealerList from "./Component/Admin/DealerList";
 import Newbanker from "./Component/Admin/NewBankers";
 import BankerList from "./Component/Admin/BankerList";
+import AgriInputs from "./Component/Dealer/AgriProducts";
+
+import "./App.css";
+import TechnicalSupport from "./Component/Dealer/TechnicalSupport";
+import FarmEssentials from "./Component/Farmer/FarmEssentials";
+import TechSupport from "./Component/Farmer/TechSupport";
 
 function App() {
   const [auth, setAuth] = useState(
@@ -75,13 +81,16 @@ function App() {
             <Route path="/salereport" element={<SaleReport />} />
             <Route path="/viewfeedback" element={<ViewFeedback />} />
             <Route path="/viewrating" element={<Viewrating />} />
+            <Route path="/farmEssentials" element={<FarmEssentials />} />
+            <Route path="/techSupport" element={<TechSupport />} />
 
             <Route path="*" element={<Navigate to="/" />} />
           </>
         ) : auth.userStatus === "3" ? (
           <>
-            <Route path="/" element={<Profile />}/> 
-            
+            <Route path="/" element={<Profile />} />
+            <Route path="/agri_inputs" element={<AgriInputs />} />
+            <Route path="/technical" element={<TechnicalSupport />} />
           </>
         ) : (
           <>

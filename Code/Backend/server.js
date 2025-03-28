@@ -593,7 +593,8 @@ app.post("/deleteNewbanker", async (req, res) => {
   }
 });
 
-// editfarmer
+// farmer
+
 app.post("/editfarmer", async (req, res) => {
   try {
     const { id, userStatus } = req.body;
@@ -616,6 +617,37 @@ app.post("/editfarmer", async (req, res) => {
     res.status(500).json({ error: "Error on update" });
   }
 });
+
+app.get("/getFarmEssentials", async (req, res) => {
+  try {
+    const db = await database;
+    const result = await db.collection("agriProducts").find().toArray();
+    res.status(200).json({ success: true, products: result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+
+app.get("/getTechSupport", async (req, res) => {
+  try {
+    const db = await database;
+    const result = await db
+      .collection("techdatas")
+      .find()
+      .toArray(); 
+
+    res.status(200).json({ success: true, datas: result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+
+
+
 
 //editdealer
 app.post("/editdealer", async (req, res) => {
@@ -2079,6 +2111,364 @@ app.post("/viewrating", async (req, res) => {
   } catch (error) {
     console.error("Error fetching ratings:", error);
     res.status(500).json({ error: "Failed to fetch ratings" });
+  }
+});
+
+// ------------Dealer----------
+
+app.post("/addAgriProduct", async (req, res) => {
+  try {
+    const { userId, name, category, price } = req.body;
+
+    if (!userId || !name || !category || !price) {
+      return res.json(400).json({ message: "empty field" });
+    }
+
+    let data = {
+      dealer: new mongodb.ObjectId(userId),
+      name,
+      category,
+      price,
+      createdAt: new Date(),
+    };
+
+    const db = await database;
+
+    if (req.files && req.files.image) {
+      const image = req.files.image;
+      const imagePath = path.join(__dirname, "public", "dealer", image.name);
+
+      image.mv(imagePath, (err) => {
+        if (err) {
+          console.error("Error moving image file:", err);
+          return res.status(500).json({ error: "Image upload failed" });
+        }
+      });
+
+      data.image = `/dealer/${image.name}`;
+    }
+
+    const agriProductsCollection = db.collection("agriProducts"); // Get collection
+    const result = await agriProductsCollection.insertOne(data); // MongoDB uses `.insertOne()`
+
+    res.status(201).json({
+      message: "Product added successfully",
+      id: result.insertedId, // MongoDB returns an ID
+    });
+  } catch (error) {
+    console.error("Error adding product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/getAgriProduct/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const db = await database;
+    const result = await db
+      .collection("agriProducts")
+      .find({ dealer: new mongodb.ObjectId(userId) })
+      .toArray();
+    res.status(200).json({ success: true, products: result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+app.post("/deletDealerProduct", async (req, res) => {
+  try {
+    const delId = req.body.id;
+    if (!delId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Product ID is required" });
+    }
+    const db = await database;
+    const result = await db
+      .collection("agriProducts")
+      .deleteOne({ _id: new mongodb.ObjectId(delId) });
+
+    if (result.deletedCount === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+    res
+      .status(200)
+      .json({ success: true, message: "Product deleted successfully", result });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+app.post("/findDealerProduct", async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Product ID is required" });
+    }
+
+    const db = await database;
+    const result = await db
+      .collection("agriProducts")
+      .findOne({ _id: new mongodb.ObjectId(id) });
+
+    if (!result) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    console.log("Product found:", result);
+    res.status(200).json({ success: true, product: result });
+  } catch (error) {
+    console.error("Error fetching dealer product:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+app.post("/editAgriProduct", async (req, res) => {
+  try {
+    const { id, name, category, price } = req.body;
+    console.log(id);
+
+    if (!id || !name || !category || !price) {
+      return res.status(400).json({ message: "Empty field" });
+    }
+
+    let data = {
+      name,
+      category,
+      price,
+      updatedAt: new Date(),
+    };
+
+    if (req.files && req.files.image) {
+      const image = req.files.image;
+      const imagePath = path.join(__dirname, "public", "dealer", image.name);
+
+      await image.mv(imagePath); // Move image
+
+      data.image = `/dealer/${image.name}`;
+    }
+
+    console.log(data);
+    console.log(id);
+
+    const db = await database;
+
+    const agriProductsCollection = db.collection("agriProducts");
+
+    const result = await agriProductsCollection.findOneAndUpdate(
+      { _id: new mongodb.ObjectId(id) }, // Convert userId to ObjectId
+      { $set: data }
+    );
+
+    console.log("nn", result);
+
+    if (!result) {
+      return res
+        .status(404)
+        .json({ message: "Product not found or not updated" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Product updated successfully", product: result.value });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// ....Technical..........
+
+app.post("/addTechnicalData", async (req, res) => {
+  try {
+    const { userId, name, description } = req.body;
+    console.log(req.body);
+    console.log(req.files);
+
+    if (!userId || !name || !description) {
+      return res.json(400).json({ message: "empty field" });
+    }
+
+    let data = {
+      dealer: new mongodb.ObjectId(userId),
+      name,
+      description,
+      createdAt: new Date(),
+    };
+
+    const db = await database;
+
+    if (req.files && req.files.file) {
+      const file = req.files.file;
+      const filePath = path.join(
+        __dirname,
+        "public",
+        "dealer",
+        "tech",
+        file.name
+      );
+
+      file.mv(filePath, (err) => {
+        if (err) {
+          console.error("Error moving  file:", err);
+          return res.status(500).json({ error: "file upload failed" });
+        }
+      });
+
+      data.file = `/dealer/tech/${file.name}`;
+    }
+
+    const techDatas = db.collection("techdatas");
+    const result = await techDatas.insertOne(data);
+
+    res.status(201).json({
+      message: "techDatas added successfully",
+      id: result.insertedId, // MongoDB returns an ID
+    });
+  } catch (error) {
+    console.error("Error adding product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/getTechnicalData/:userid", async (req, res) => {
+  try {
+    const { userid } = req.params;
+    const db = await database;
+    const result = await db
+      .collection("techdatas")
+      .find({ dealer: new mongodb.ObjectId(userid) })
+      .toArray();
+
+    res.status(200).json({ success: true, datas: result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+app.post("/deletTechDatas", async (req, res) => {
+  try {
+    const delId = req.body.id;
+    if (!delId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "tech ID is required" });
+    }
+    const db = await database;
+    const result = await db
+      .collection("techdatas")
+      .deleteOne({ _id: new mongodb.ObjectId(delId) });
+
+    if (result.deletedCount === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "tech not found" });
+    }
+    res
+      .status(200)
+      .json({ success: true, message: "tech deleted successfully", result });
+  } catch (error) {
+    console.error("Error deleting tech:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+app.post("/findTechDatas", async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Product ID is required" });
+    }
+
+    const db = await database;
+    const result = await db
+      .collection("techdatas")
+      .findOne({ _id: new mongodb.ObjectId(id) });
+
+    if (!result) {
+      return res
+        .status(404)
+        .json({ success: false, message: "datas not found" });
+    }
+
+    console.log("datas found:", result);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error("Error fetching technical data:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+app.post("/editTechData", async (req, res) => {
+  try {
+    const { id, name, description } = req.body;
+    // console.log(id);
+
+    if (!id || !name || !description) {
+      return res.status(400).json({ message: "Empty field" });
+    }
+
+    let data = {
+      name,
+      description,
+      updatedAt: new Date(),
+    };
+
+    if (req.files && req.files.file) {
+      const file = req.files.file;
+      const filePath = path.join(
+        __dirname,
+        "public",
+        "dealer",
+        "tech",
+        file.name
+      );
+
+      await file.mv(filePath); // Move image
+
+      data.file = `/dealer/tech/${file.name}`;
+    }
+
+    console.log(data);
+    console.log(id);
+
+    const db = await database;
+
+    const agriProductsCollection = db.collection("techdatas");
+
+    const result = await agriProductsCollection.findOneAndUpdate(
+      { _id: new mongodb.ObjectId(id) }, // Convert userId to ObjectId
+      { $set: data }
+    );
+
+    console.log("nn", result);
+
+    if (!result) {
+      return res
+        .status(404)
+        .json({ message: "Product not found or not updated" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Product updated successfully", product: result.value });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
