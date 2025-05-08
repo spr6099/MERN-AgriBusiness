@@ -42,7 +42,7 @@ export default function Login() {
         console.log(result);
         if (result.message === "Login successful") {
           // if (result.userData.userStatus !== "0" && result.userData.userStatus !== "1") {
-          if (!["1", "0", "3"].includes(result.userData.userStatus)) {
+          if (!["1", "0", "3","4"].includes(result.userData.userStatus)) {
             setError("Invalid login attempt. Please try again.");
             return;
           }
@@ -123,3 +123,7 @@ export default function Login() {
     </div>
   );
 }
+
+
+
+  

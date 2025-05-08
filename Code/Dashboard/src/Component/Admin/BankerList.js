@@ -48,6 +48,10 @@ export default function BankerList() {
     }
   };
 
+
+  // console.log(bankers);
+  
+
   return (
     <>
       <div className="container-fluid d-flex p-0">

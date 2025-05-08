@@ -49,4 +49,24 @@
 
 .product-card {
   width: 100%;
+} 
+
+
+
+
+/* BankReport.css */
+
+.table-bordered > :not(caption) > * > * {
+  border: 1px solid #dee2e6; /* ensure border around everything */
+}
+
+.table-sm td,
+.table-sm th {
+  padding: 0.3rem;
+  font-size: 0.85rem;
+}
+
+/* Optional: add background to nested table rows */
+.nested-table thead {
+  background-color: #f8f9fa;
 }

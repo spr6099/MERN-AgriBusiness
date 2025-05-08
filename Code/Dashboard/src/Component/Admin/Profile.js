@@ -84,7 +84,7 @@ export default function Profile() {
         <Sidebar />
         <div className="flex-grow-1">
           <Header />
-          <div className="content p-4">
+          <div className="content ">
             <section
               className="section about-section gray-bg ml-5  "
               id="about"

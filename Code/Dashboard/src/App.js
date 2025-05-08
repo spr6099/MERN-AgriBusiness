@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import "./App.css";
+// import 'bootstrap/dist/css/bootstrap.min.css';
+
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import Login from "./Component/Login";
 import Home from "./Component/Home";
 import Sidebar from "./Component/Sidebar";
@@ -29,10 +37,20 @@ import Newbanker from "./Component/Admin/NewBankers";
 import BankerList from "./Component/Admin/BankerList";
 import AgriInputs from "./Component/Dealer/AgriProducts";
 
-import "./App.css";
 import TechnicalSupport from "./Component/Dealer/TechnicalSupport";
 import FarmEssentials from "./Component/Farmer/FarmEssentials";
 import TechSupport from "./Component/Farmer/TechSupport";
+import BankDashBoard from "./Component/Bank/BankDashBoard";
+import Finance from "./Component/Farmer/Finance";
+import BankPage from "./Component/Farmer/bank/BankPage";
+import LoanDetails from "./Component/Bank/LoanDetails";
+import LoanRequests from "./Component/Bank/LoanRequests";
+import Techdata from "./Component/Farmer/Tech/Techdata";
+import LoansStatus from "./Component/Farmer/bank/LoansStatus";
+import BankReport from "./Component/Admin/reports/BankReport";
+import FarmerReport from "./Component/Admin/reports/FarmerReport";
+import DealerReport from "./Component/Admin/reports/DealerReport";
+import UserReport from "./Component/Admin/reports/UserReport";
 
 function App() {
   const [auth, setAuth] = useState(
@@ -40,7 +58,7 @@ function App() {
   );
 
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         {auth == null ? (
           <>
@@ -62,10 +80,15 @@ function App() {
             <Route path="/complaints" element={<Complaints />} />
             <Route path="/products" element={<Viewproduct />} />
             <Route path="/salelist" element={<SaleList />} />
-            <Route path="*" element={<Navigate to="/" />} />
             <Route path="/addcategory" element={<AddCategory />} />
             <Route path="/viewcategory" element={<ViewCategory />} />
             <Route path="/editcategory" element={<EditCategory />} />
+            <Route path="/bankReport" element={<BankReport />} />
+            <Route path="/farmerReport" element={<FarmerReport />} />
+            <Route path="/dealerReport" element={<DealerReport />} />
+            <Route path="/userReport" element={<UserReport />} />
+
+            <Route path="*" element={<Navigate to="/" />} />
           </>
         ) : auth.userStatus === "1" ? (
           <>
@@ -83,6 +106,10 @@ function App() {
             <Route path="/viewrating" element={<Viewrating />} />
             <Route path="/farmEssentials" element={<FarmEssentials />} />
             <Route path="/techSupport" element={<TechSupport />} />
+            <Route path="/finance" element={<Finance />} />
+            <Route path="/bankingpage/:id" element={<BankPage />} />
+            <Route path="/loanStatus" element={<LoansStatus />} />
+            <Route path="/techdata" element={<Techdata />} />
 
             <Route path="*" element={<Navigate to="/" />} />
           </>
@@ -92,6 +119,13 @@ function App() {
             <Route path="/agri_inputs" element={<AgriInputs />} />
             <Route path="/technical" element={<TechnicalSupport />} />
           </>
+        ) : auth.userStatus === "4" ? (
+          <>
+            <Route path="/" element={<BankDashBoard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/loandetails" element={<LoanDetails />} />
+            <Route path="/loanrequests" element={<LoanRequests />} />
+          </>
         ) : (
           <>
             <Route path="/" element={<Login />} />
@@ -99,7 +133,7 @@ function App() {
           </>
         )}
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 

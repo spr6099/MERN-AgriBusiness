@@ -36,6 +36,7 @@ app.use(
 );
 
 app.use(express.static(path.join(__dirname, "public")));
+
 app.use(expressFileupload());
 
 // register
@@ -146,6 +147,100 @@ app.post("/login", async (req, res) => {
     }
   } catch (error) {
     console.error("Login error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post("/profile", async (req, res) => {
+  const userid = req.body.userid;
+  try {
+    const db = await database;
+
+    const registerData = await db
+      .collection("register")
+      .findOne({ userId: new mongodb.ObjectId(userid) });
+    if (!registerData) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const loginData = await db
+      .collection("login")
+      .findOne({ _id: new mongodb.ObjectId(registerData.userId) });
+    if (!loginData) {
+      return res.status(404).json({ error: "Login data not found" });
+    }
+
+    const userProfile = {
+      ...registerData,
+      email: loginData.email,
+      status: loginData.userStatus,
+    };
+
+    res.json(userProfile);
+  } catch (error) {
+    console.error("Error during fetching profile:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post("/updateProfile", async (req, res) => {
+  const { userId, name, category, address, phone, dob, email } = req.body;
+  const profileUpdate = {};
+
+  if (name) profileUpdate.name = name;
+  if (category) profileUpdate.category = category;
+  if (address) profileUpdate.address = address;
+  if (phone) profileUpdate.phone = phone;
+  if (dob) profileUpdate.dob = dob;
+
+  try {
+    const db = await database;
+
+    if (req.files && req.files.image) {
+      const image = req.files.image;
+      const imagePath = path.join(__dirname, "public", "uploads", image.name);
+
+      image.mv(imagePath, (err) => {
+        if (err) {
+          console.error("Error moving image file:", err);
+          return res.status(500).json({ error: "Image upload failed" });
+        }
+      });
+
+      profileUpdate.image = `/uploads/${image.name}`;
+    }
+
+    // Update profile data in 'register' collection
+    await db
+      .collection("register")
+      .updateOne(
+        { userId: new mongodb.ObjectId(userId) },
+        { $set: profileUpdate }
+      );
+
+    // Update email in 'login' collection
+    if (email) {
+      await db
+        .collection("login")
+        .updateOne({ _id: new mongodb.ObjectId(userId) }, { $set: { email } });
+    }
+
+    const updatedProfile = await db
+      .collection("register")
+      .findOne({ userId: new mongodb.ObjectId(userId) });
+    const loginData = await db
+      .collection("login")
+      .findOne({ _id: new mongodb.ObjectId(userId) });
+
+    const userProfile = {
+      ...updatedProfile,
+      email: loginData.email,
+      status: loginData.userStatus,
+    };
+
+    res.json(userProfile);
+  } catch (error) {
+    console.error("Error updating profile:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -629,14 +724,10 @@ app.get("/getFarmEssentials", async (req, res) => {
   }
 });
 
-
 app.get("/getTechSupport", async (req, res) => {
   try {
     const db = await database;
-    const result = await db
-      .collection("techdatas")
-      .find()
-      .toArray(); 
+    const result = await db.collection("techdatas").find().toArray();
 
     res.status(200).json({ success: true, datas: result });
   } catch (error) {
@@ -644,10 +735,6 @@ app.get("/getTechSupport", async (req, res) => {
     res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
-
-
-
-
 
 //editdealer
 app.post("/editdealer", async (req, res) => {
@@ -1787,100 +1874,6 @@ app.post("/rating", async (req, res) => {
   }
 });
 
-app.post("/profile", async (req, res) => {
-  const userid = req.body.userid;
-  try {
-    const db = await database;
-
-    const registerData = await db
-      .collection("register")
-      .findOne({ userId: new mongodb.ObjectId(userid) });
-    if (!registerData) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const loginData = await db
-      .collection("login")
-      .findOne({ _id: new mongodb.ObjectId(registerData.userId) });
-    if (!loginData) {
-      return res.status(404).json({ error: "Login data not found" });
-    }
-
-    const userProfile = {
-      ...registerData,
-      email: loginData.email,
-      status: loginData.userStatus,
-    };
-
-    res.json(userProfile);
-  } catch (error) {
-    console.error("Error during fetching profile:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-app.post("/updateProfile", async (req, res) => {
-  const { userId, name, category, address, phone, dob, email } = req.body;
-  const profileUpdate = {};
-
-  if (name) profileUpdate.name = name;
-  if (category) profileUpdate.category = category;
-  if (address) profileUpdate.address = address;
-  if (phone) profileUpdate.phone = phone;
-  if (dob) profileUpdate.dob = dob;
-
-  try {
-    const db = await database;
-
-    if (req.files && req.files.image) {
-      const image = req.files.image;
-      const imagePath = path.join(__dirname, "public", "uploads", image.name);
-
-      image.mv(imagePath, (err) => {
-        if (err) {
-          console.error("Error moving image file:", err);
-          return res.status(500).json({ error: "Image upload failed" });
-        }
-      });
-
-      profileUpdate.image = `/uploads/${image.name}`;
-    }
-
-    // Update profile data in 'register' collection
-    await db
-      .collection("register")
-      .updateOne(
-        { userId: new mongodb.ObjectId(userId) },
-        { $set: profileUpdate }
-      );
-
-    // Update email in 'login' collection
-    if (email) {
-      await db
-        .collection("login")
-        .updateOne({ _id: new mongodb.ObjectId(userId) }, { $set: { email } });
-    }
-
-    const updatedProfile = await db
-      .collection("register")
-      .findOne({ userId: new mongodb.ObjectId(userId) });
-    const loginData = await db
-      .collection("login")
-      .findOne({ _id: new mongodb.ObjectId(userId) });
-
-    const userProfile = {
-      ...updatedProfile,
-      email: loginData.email,
-      status: loginData.userStatus,
-    };
-
-    res.json(userProfile);
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
 // admin view sales
 // app.get('/salelist', (req, res) => {
 //   database.then(async (dbase) => {
@@ -2413,6 +2406,25 @@ app.post("/findTechDatas", async (req, res) => {
   }
 });
 
+app.get("/allTechDatas", async (req, res) => {
+  try {
+    const db = await database;
+    const result = await db.collection("techdatas").find().toArray();
+
+    if (!result) {
+      return res
+        .status(404)
+        .json({ success: false, message: "datas not found" });
+    }
+
+    console.log("datas found:", result);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error("Error fetching technical data:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
 app.post("/editTechData", async (req, res) => {
   try {
     const { id, name, description } = req.body;
@@ -2468,6 +2480,447 @@ app.post("/editTechData", async (req, res) => {
       .json({ message: "Product updated successfully", product: result.value });
   } catch (error) {
     console.error("Error updating product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+//.......Bank
+
+app.post("/addLoanData", async (req, res) => {
+  try {
+    const { userid, type, description, category, amount, interest } = req.body;
+
+    if (!userid || !type || !description || !category || !interest) {
+      return res.json(400).json({ message: "empty field" });
+    }
+
+    let data = {
+      bank: new mongodb.ObjectId(userid),
+      type,
+      description,
+      category,
+      amount,
+      interest,
+      createdAt: new Date(),
+    };
+
+    const db = await database;
+
+    // if (req.files && req.files.file) {
+    //   const file = req.files.file;
+    //   const filePath = path.join(
+    //     __dirname,
+    //     "public",
+    //     "bank",
+    //     "loan",
+    //     file.name
+    //   );
+
+    //   file.mv(filePath, (err) => {
+    //     if (err) {
+    //       console.error("Error moving file file:", err);
+    //       return res.status(500).json({ error: "file upload failed" });
+    //     }
+    //   });
+
+    //   data.file = `/bank/loan/${file.name}`;
+    // }
+
+    const loanDetails = db.collection("loandetails"); // Get collection
+    const result = await loanDetails.insertOne(data); // MongoDB uses `.insertOne()`
+
+    res.status(201).json({
+      message: "Product added successfully",
+      id: result.insertedId, // MongoDB returns an ID
+    });
+  } catch (error) {
+    console.error("Error adding product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/getloandetails/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const db = await database;
+    const result = await db
+      .collection("loandetails")
+      .find({ bank: new mongodb.ObjectId(userId) })
+      .toArray();
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+app.post("/apply-loan", async (req, res) => {
+  try {
+    const {
+      userName,
+      email,
+      phone,
+      accountNumber,
+      loanAmount,
+      loanDuration,
+      address,
+      loanType,
+      bankId,
+      loanId,
+      userId,
+      loanStatus,
+    } = req.body;
+
+    // if (!userid || !type || !description || !category || !interest) {
+    //   return res.json(400).json({ message: "empty field" });
+    // }
+
+    let data = {
+      userName,
+      email,
+      phone,
+      accountNumber,
+      loanAmount,
+      loanDuration,
+      address,
+      loanType,
+      bankId: new mongodb.ObjectId(bankId),
+      loanId: new mongodb.ObjectId(loanId),
+      userId: new mongodb.ObjectId(userId),
+      loanStatus,
+      createdAt: new Date(),
+    };
+
+    const db = await database;
+    if (req.files && req.files.image) {
+      const image = req.files.image;
+      const imagePath = path.join(
+        __dirname,
+        "public",
+        "bank",
+        "loan",
+        image.name
+      );
+
+      image.mv(imagePath, (err) => {
+        if (err) {
+          console.error("Error moving image file:", err);
+          return res.status(500).json({ error: "Image upload failed" });
+        }
+      });
+
+      data.image = `/public/bank/loan/${image.name}`;
+    }
+    const loanDetails = db.collection("loan"); // Get collection
+    const result = await loanDetails.insertOne(data); // MongoDB uses `.insertOne()`
+
+    res.status(201).json({
+      message: "Product added successfully",
+      id: result.insertedId, // MongoDB returns an ID
+    });
+  } catch (error) {
+    console.error("Error adding product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post("/getLoanReqDetails", async (req, res) => {
+  try {
+    const { userId, user } = req.body;
+    console.log(user, userId);
+
+    const db = await database;
+    const result = await db
+      .collection("loan")
+      .find({ [user]: new mongodb.ObjectId(userId) })
+      .toArray();
+    // console.log(result);
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+app.post("/updateLoanAmount", async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "Empty field" });
+    }
+
+    let newEntry = {
+      loanStatus: req.body["loan[status]"],
+      paidAmount: req.body["loan[amount]"],
+      transactionId: req.body.transactionId,
+      updatedAt: new Date(),
+    }; // Just an object, not an array
+
+    const db = await database;
+    const updateLoanStatus = db.collection("loan");
+
+    const result = await updateLoanStatus.findOneAndUpdate(
+      { _id: new mongodb.ObjectId(id) },
+      { $push: { loanRepay: newEntry } }, // ✅ Push object directly
+      { returnDocument: "after" }
+    );
+
+    if (!result.value) {
+      return res.status(404).json({ message: "Loan not found or not updated" });
+    }
+
+    res.status(200).json({
+      message: "Loan updated successfully",
+      updatedLoan: result.value,
+    });
+  } catch (error) {
+    console.error("Error updating loan:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// ----Report
+
+// ----Bank
+app.get("/getbankUsers", async (req, res) => {
+  try {
+    const db = await database;
+
+    const result = await db
+      .collection("login")
+      .aggregate([
+        {
+          $lookup: {
+            from: "register",
+            localField: "_id",
+            foreignField: "userId",
+            as: "userDetails",
+          },
+        },
+        {
+          $unwind: "$userDetails",
+        },
+        {
+          $match: {
+            "userDetails.category": "bank",
+          },
+        },
+        {
+          $lookup: {
+            from: "loandetails", // collection storing loan info
+            localField: "_id", // match with loanDetails.bank
+            foreignField: "bank",
+            as: "loanDetails",
+          },
+        },
+        {
+          $lookup: {
+            from: "loan", // collection storing loan info
+            localField: "_id", // match with loanDetails.bank
+            foreignField: "bankId",
+            as: "loans",
+          },
+        },
+        {
+          $project: {
+            email: 1,
+            userStatus: 1,
+            name: "$userDetails.name",
+            address: "$userDetails.address",
+            image: "$userDetails.image",
+            createdAt: "$userDetails.createdAt",
+            loanDetails: 1, // full loan info array
+            loans: 1, // full loan info array
+          },
+        },
+      ])
+      .toArray();
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching bank users with loan details:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+// ----Dealer
+app.get("/getDealers", async (req, res) => {
+  try {
+    const db = await database;
+
+    const result = await db
+      .collection("login")
+      .aggregate([
+        {
+          $lookup: {
+            from: "register",
+            localField: "_id",
+            foreignField: "userId",
+            as: "userDetails",
+          },
+        },
+        {
+          $unwind: "$userDetails",
+        },
+        {
+          $match: {
+            "userDetails.category": "dealer",
+          },
+        },
+        {
+          $lookup: {
+            from: "techdatas", // collection storing loan info
+            localField: "_id", // match with loanDetails.bank
+            foreignField: "dealer",
+            as: "techData",
+          },
+        },
+        {
+          $lookup: {
+            from: "agriProducts", // collection storing loan info
+            localField: "_id", // match with loanDetails.bank
+            foreignField: "dealer",
+            as: "agriProducts",
+          },
+        },
+        {
+          $project: {
+            email: 1,
+            userStatus: 1,
+            name: "$userDetails.name",
+            address: "$userDetails.address",
+            image: "$userDetails.image",
+            createdAt: "$userDetails.createdAt",
+            techData: 1, // full loan info array
+            agriProducts: 1, // full loan info array
+          },
+        },
+      ])
+      .toArray();
+
+    res.json(result);
+    // console.log(result);
+  } catch (error) {
+    console.error("Error fetching bank users with loan details:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+// ----Farmer
+app.get("/getFarmers", async (req, res) => {
+  try {
+    const db = await database;
+
+    const result = await db
+      .collection("login")
+      .aggregate([
+        {
+          $lookup: {
+            from: "register",
+            localField: "_id",
+            foreignField: "userId",
+            as: "userDetails",
+          },
+        },
+        {
+          $unwind: "$userDetails",
+        },
+        {
+          $match: {
+            "userDetails.category": "farmer",
+          },
+        },
+        {
+          $lookup: {
+            from: "cultivation",
+            localField: "_id",
+            foreignField: "farmerid",
+            as: "cultivationDatas",
+          },
+        },
+        {
+          $lookup: {
+            from: "product",
+            let: { farmerIdStr: { $toString: "$_id" } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$farmerid", "$$farmerIdStr"],
+                  },
+                },
+              },
+            ],
+            as: "productDatas",
+          },
+        },
+        {
+          $project: {
+            email: 1,
+            userStatus: 1,
+            name: "$userDetails.name",
+            address: "$userDetails.address",
+            image: "$userDetails.image",
+            createdAt: "$userDetails.createdAt",
+            cultivationDatas: 1,
+            productDatas: 1,
+          },
+        },
+      ])
+      .toArray();
+
+    res.json(result);
+    // console.log("farmer", result);
+  } catch (error) {
+    console.error("Error fetching farmers with details:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+// ----Users
+app.get("/getAllUsers", async (req, res) => {
+  try {
+    const db = await database;
+
+    const result = await db
+      .collection("login")
+      .aggregate([
+        {
+          $lookup: {
+            from: "register",
+            localField: "_id",
+            foreignField: "userId",
+            as: "userDetails",
+          },
+        },
+        {
+          $unwind: "$userDetails",
+        },
+        {
+          $match: {
+            "userDetails.category": "public",
+          },
+        },
+
+        {
+          $project: {
+            email: 1,
+            userStatus: 1,
+            name: "$userDetails.name",
+            address: "$userDetails.address",
+            image: "$userDetails.image",
+            createdAt: "$userDetails.createdAt",
+            // cultivationDatas: 1,
+            // productDatas: 1,
+          },
+        },
+      ])
+      .toArray();
+
+    res.json(result);
+    console.log("user", result);
+  } catch (error) {
+    console.error("Error fetching farmers with details:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
